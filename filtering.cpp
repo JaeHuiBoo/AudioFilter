@@ -38,7 +38,7 @@ namespace examples
 {
     void loadAudioFiltering(){
         //1. Set a file path to an audio file on your machine 
-        const string filePath = "audiosample/sine-wave.wav";
+        const string filePath = "audiosample/coyote.wav";
 
         //2. Create An AudioFile Object and load the Audio file
         AudioFile<float> origin;
@@ -70,13 +70,10 @@ namespace examples
                     freq = (asin(origin.samples[channel][i])*origin.getSampleRate())/(2.f*M_PI*static_cast<float> (i));
                     //origin.samples[channel][i] = sin ((static_cast<float> (i) / sampleRate) * frequencyInHz * 2.f * M_PI); 를 역으로 풀어서 사용.
                     if(abs(freq)>maxfreq)
-                    {
                         maxfreq = freq;
-                        cout << "MAX_FREQ : " << maxfreq << endl;
-                    }
                     //cout << "freq : " << freq << endl;
                     
-                    if(abs(freq)>1 && !recording) //시작할 때,
+                    if(abs(freq)>0.003&& !recording) //시작할 때,
                     {
                         recording = true;
                         startTime = clock();
@@ -84,10 +81,10 @@ namespace examples
                     }
                     if(recording) 
                     {
-                        if(abs(freq)>1)//도중 - 값 넣기 
+                        if(abs(freq)>0.003)//도중 - 값 넣기 
                         {
                             cout << "recording ... freq: " << abs(freq) << endl;
-                            recordList.push_back(origin.samples[0][i]);
+                            recordList.push_back(origin.samples[channel][i]);
                         }
                         else{ //끝 - wav파일 추출 메소드 돌리기 
                             recording = false;
@@ -102,6 +99,8 @@ namespace examples
                     
                 }
         }
+        string path = "audiosample/copy_coyote.wav";
+        origin.save(path, AudioFileFormat::Wave);
     }
     
     void writingFile(list<float> valueList, int sampleRate, double lengthTime, int count){
@@ -109,17 +108,19 @@ namespace examples
         list<float>::iterator iter;
         AudioFile<float> filteredAudio;
         filteredAudio.setNumChannels(2);
-        filteredAudio.setNumSamplesPerChannel(sampleRate*lengthTime);
+        filteredAudio.setNumSamplesPerChannel((int)(sampleRate*lengthTime));
         int i =0;
         for(iter = valueList.begin(); iter!=valueList.end();iter++)
         {
-            //cout << "value of iter: " << *iter << endl;
-            filteredAudio.samples[0][i] = *iter;
-            filteredAudio.samples[1][i] = *iter;
+            cout << "value of iter: " << *iter << endl;
+            if(i%2==0)
+                filteredAudio.samples[0][i/2] = *iter;
+            else
+                filteredAudio.samples[1][i/2] = *iter;
             i++;
         }
         string newFilePath = "audiosample/extract_"+ to_string(count) +".wav";
-        filteredAudio.save(newFilePath, AudioFileFormat::Wave);
+        filteredAudio.save(newFilePath, AudioFileFormat::Aiff);
         cout << "|==================================|"<< endl;
     }
 }
